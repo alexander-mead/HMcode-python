@@ -4,6 +4,11 @@ To whom it may concern,
 
 I coded this `Python` version of `HMcode` up quite quickly before leaving academia. It is written in pure `Python` and doesn't use any of the original Fortran code whatsoever. There is something amazing/dispiriting about coding something up in 3 days that previously took 5 years. A tragic last hoorah! At least I switched to `Python` eventually...
 
+To install, clone the repository, `cd` into the directory, and then
+```
+poetry install
+```
+
 I tested it against the `CAMB-HMcode` version for 100 random sets of cosmological parameters ($k < 10 h\mathrm{Mpc}^{-1}$; $z < 3$). The level of agreement between the two codes is as follows:
 - LCDM: Mean error: 0.10%; Std error: 0.03%; Worst error; 0.21%
 - k-LCDM: Mean error: 0.11%; Std error: 0.03%; Worst error; 0.23%
