@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+.ipynb_checkpoints/
+dist/
+
+# Plots
+*.pdf
+
+# VScode
+.vscode/
