@@ -3,9 +3,9 @@ import sys
 import numpy as np
 
 # Project imports
-import pyhalomodel.camb_stuff as camb_stuff
-import pyhalomodel.utility as util
-from pyhalomodel.pyhmcode import hmcode as HMcode
+import pyhmcode.camb_stuff as camb_stuff
+import pyhmcode.utility as util
+from pyhmcode import hmcode as HMcode
 
 # Vary these parameters
 vary_Omega_k = True

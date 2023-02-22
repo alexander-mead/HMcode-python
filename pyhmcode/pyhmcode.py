@@ -205,7 +205,7 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         rv = hmod.virial_radius(M) 
         Uk = np.ones((len(k), len(M)))
         for iM, (_rv, _c, _nu) in enumerate(zip(rv, c, nu)): # TODO: Remove loop for speed?
-            Uk[:, iM] = halo._win_NFW(k*(_nu**eta), _rv, _c)[:, 0]
+            Uk[:, iM] = _win_NFW(k*(_nu**eta), _rv, _c)[:, 0]
         profile = halo.profile.Fourier(k, M, Uk, amplitude=M*(1.-f_nu)/hmod.rhom, mass_tracer=True) # NOTE: Factor of 1-f_nu
 
         # Vanilla power spectrum calculation
@@ -290,3 +290,21 @@ def _get_halo_collapse_redshifts(M:np.ndarray, z:float, iz:int, dc:float, g:call
             af = root_scalar(af_root, bracket=(1e-3, 1.)).root
         zf[iM] = cosmology.redshift_from_scalefactor(af)
     return zf
+
+
+def _win_NFW(k:np.ndarray, rv:np.ndarray, c:np.ndarray) -> np.ndarray:
+    '''
+    Normalised Fourier transform for an NFW profile
+    '''
+    from scipy.special import sici
+    rs = rv/c
+    kv = np.outer(k, rv)
+    ks = np.outer(k, rs)
+    Sisv, Cisv = sici(ks+kv)
+    Sis, Cis = sici(ks)
+    f1 = np.cos(ks)*(Cisv-Cis)
+    f2 = np.sin(ks)*(Sisv-Sis)
+    f3 = np.sin(kv)/(ks+kv)
+    f4 = np.log(1.+c)-c/(1.+c)
+    Wk = (f1+f2-f3)/f4
+    return Wk
