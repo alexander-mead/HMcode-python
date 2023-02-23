@@ -121,13 +121,13 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         B = 5.196                    # Minimum halo concentration; equation (20)
         alpha = 1.875*(1.603)**neff  # Transition smoothing; equation (23)
         if verbose:
-           print('Two-halo damping wavenumber: {:.4} h/Mpc'.format(kd))
-           print('Two-halo fractional damping: {:.4}'.format(f))
-           print('Two-halo damping power: {:.4}'.format(nd))
-           print('One-halo damping wavenumber: {:.4} h/Mpc'.format(ks))
-           print('Halo bloating: {:.4}'.format(eta))
-           print('Minimum halo concentration: {:.4}'.format(B))#, B/4.)
-           print('Transition smoothing: {:.4}'.format(alpha))
+           print('Two-halo damping wavenumber; kd: {:.4} h/Mpc'.format(kd))
+           print('Two-halo fractional damping; f: {:.4}'.format(f))
+           print('Two-halo damping power; nd: {:.4}'.format(nd))
+           print('One-halo damping wavenumber; k*: {:.4} h/Mpc'.format(ks))
+           print('Halo bloating; eta: {:.4}'.format(eta))
+           print('Minimum halo concentration; B: {:.4}'.format(B))#, B/4.)
+           print('Transition smoothing; alpha: {:.4}'.format(alpha))
            print()
 
         # Halo concentration
