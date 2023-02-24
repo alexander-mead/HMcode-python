@@ -4,7 +4,7 @@ To whom it may concern,
 
 I coded this `Python` version of `HMcode-2020` (confusingly [Mead et al. 2021](https://arxiv.org/abs/2009.01858)) up quite quickly before leaving academia. It is written in pure `Python` and doesn't use any of the original Fortran code whatsoever. There is something amazing/dispiriting about coding something up in 3 days that previously took 5 years. A tragic last hoorah! At least I switched to `Python` eventually...
 
-You might also be interested in [`pyhalomodel`](https://github.com/alexander-mead/pyhalomodel), upon which this code depends, which implements a vanilla halo-model calculation for any desired large-scale structure tracer. Alternataively, and very confusingly, you might be intereted in this [`pyhmcode`](https://pypi.org/project/pyhmcode/), which provides a wrapper around the original `Fortran` `HMcode` implementation.
+You might also be interested in [`pyhalomodel`](https://github.com/alexander-mead/pyhalomodel), upon which this code depends, which implements a vanilla halo-model calculation for any desired large-scale-structure tracer, with the user providing only the halo profiles. Alternataively, and very confusingly, you might be intereted in this [`pyhmcode`](https://pypi.org/project/pyhmcode/), which provides a wrapper around the original `Fortran` `HMcode` implementation.
 
 To install, clone the repository, `cd` into the directory, and then
 ```
