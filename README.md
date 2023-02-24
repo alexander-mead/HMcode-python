@@ -2,7 +2,7 @@
 
 To whom it may concern,
 
-I coded this `Python` version of `HMcode` up quite quickly before leaving academia. It is written in pure `Python` and doesn't use any of the original Fortran code whatsoever. There is something amazing/dispiriting about coding something up in 3 days that previously took 5 years. A tragic last hoorah! At least I switched to `Python` eventually...
+I coded this `Python` version of `HMcode-2020` (confusingly [Mead et al. 2021](https://arxiv.org/abs/2009.01858)) up quite quickly before leaving academia. It is written in pure `Python` and doesn't use any of the original Fortran code whatsoever. There is something amazing/dispiriting about coding something up in 3 days that previously took 5 years. A tragic last hoorah! At least I switched to `Python` eventually...
 
 To install, clone the repository, `cd` into the directory, and then
 ```
