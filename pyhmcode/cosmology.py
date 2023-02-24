@@ -4,14 +4,14 @@ import scipy.integrate as integrate
 
 # Project imports
 from . import constants as const
-from . import utility as util
 
 # Constants
-Dv0 = 18.*np.pi**2 # Delta_v = ~178, EdS halo virial overdensity
+Dv0 = 18.*np.pi**2                  # Delta_v = ~178, EdS halo virial overdensity
 dc0 = (3./20.)*(12.*np.pi)**(2./3.) # delta_c = ~1.686' EdS linear collapse threshold
 
 # Parameters
-xmin_Tk = 1e-5 # Scale at which to switch to Taylor expansion approximation in tophat Fourier functions
+xmin_Tk = 1e-5    # Scale at which to switch to Taylor expansion approximation in tophat Fourier functions
+eps_sigmaV = 1e-3 # Accuracy of the sigmaV integration NOTE: Seems to fail with higher accuracy
 
 ### Backgroud ###
 
@@ -102,15 +102,25 @@ def _sigmaR_quad(R:float, Pk:callable) -> float:
     return sigma_func(R, Pk)
 
 
-def sigmaV(Pk:callable, eps=1e-4) -> float:
+# def _sigmaV_integrand(t, Pk, alpha=3.):
+#     k = (-1.+1./t)**alpha
+#     return Pk(k)*k*alpha/(t*(1.-t))
+
+
+def sigmaV(Pk:callable, eps=eps_sigmaV) -> float:
     '''
     Quad integration; R=0
-    TODO: This generates a warning sometimes, there must be a cleverer way to integrate here
+    TODO: This generates a warning sometimes, there must be a cleverer way to integrate here.
+    Unless eps_sigmaV > 1e-3 the integration fails for z=0 sometimes, but not after being called for
+    z > 0. I really don't understaand this, but it's annoying and should be fixed.
+    I should look at how CAMB deals with these type of integrals (e.g., sigmaR).
     args:
         Pk: Function of k to evaluate the linear power spectrum
         eps: Integration accuracy
     '''
-    sigmaV_squared, _ = integrate.quad(Pk, 0., np.inf, epsabs=eps, epsrel=eps)
+    kmin, kmax = 0., np.inf
+    sigmaV_squared, _ = integrate.quad(Pk, kmin, kmax, epsrel=eps, epsabs=eps)
+    #sigmaV_squared, _ = integrate.quad(_sigmaV_integrand, 0., 1., args=(Pk,), epsabs=eps, epsrel=eps)
     sigmaV = np.sqrt(sigmaV_squared/(2.*np.pi**2))
     sigmaV /= np.sqrt(3.) # Convert from 3D displacement to 1D displacement
     return sigmaV

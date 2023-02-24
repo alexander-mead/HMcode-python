@@ -10,13 +10,16 @@ from . import utility as util
 from . import cosmology
 from . import linear_growth
 
+# Parameters
+Pk_lin_extrap_kmax = 1e10 # TODO: This interplays with the sigmaV integration in a disconcerting way
+
 def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, 
            Mmin=1e0, Mmax=1e18, nM=256, verbose=False) -> np.ndarray:
     '''
     Calculates the HMcode matter-matter power spectrum
     Args:
         k: Array of comoving wavenumbers [h/Mpc]
-        zs: Array of redshifts
+        zs: Array of redshifts (ordered from high to low)
         CAMB_results: CAMBdata structure
     Returns:
         Array of matter power spectra: Pk[z, k]
@@ -52,7 +55,7 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         print()
 
     # Linear power interpolator
-    Pk_lin_interp = CAMB_results.get_matter_power_interpolator(nonlinear=False).P
+    Pk_lin_interp = CAMB_results.get_matter_power_interpolator(nonlinear=False, extrap_kmax=Pk_lin_extrap_kmax).P
 
     # Loop over redshift
     Pk_HMcode = np.zeros((len(zs), len(k)))
