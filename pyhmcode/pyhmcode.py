@@ -1,5 +1,6 @@
 # Standard imports
 import numpy as np
+from time import time
 
 # Third-party imports
 import camb
@@ -26,7 +27,8 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
     '''
 
     # Checks
-    if not util.is_array_monotonic(-zs):
+    if verbose: t_start = time()
+    if not util.is_array_monotonic(-np.array(zs)):
         raise ValueError('Redshift must be monotonically decreasing')
 
     # Halo mass range
@@ -107,8 +109,9 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         # Parameters of the linear spectrum pertaining to non-linear growth
         Rnl = _get_nonlinear_radius(R[0], R[-1], dc, iz, CAMB_results, cold=True) # Non-linear Lagrangian radius
         sigma8 = _get_sigmaR(8., iz, CAMB_results, cold=True)                     # RMS in the linear cold matter field at 8 Mpc/h
-        sigmaV = cosmology.sigmaV(Pk=lambda k: Pk_lin_interp(z, k))               # RMS in the linear displacement field
+        sigmaV = cosmology.sigmaV(lambda k: Pk_lin_interp(z, k))                  # RMS in the linear displacement field
         neff = _get_effective_index(Rnl, R, sigmaM)                               # Effective index of spectrum at collapse scale
+
         if verbose:
             print('Non-linear Lagrangian radius: {:.4} Mpc/h'.format(Rnl))
             print('RMS in matter field at 8 Mpc/h: {:.4}'.format(sigma8))
@@ -159,6 +162,10 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         Pk_HMcode[iz, :] = Pk_hm
 
     # Finish
+    if verbose:
+        t_finish = time()
+        print('HMcode predictions complete for {:} redshifts'.format(len(zs)))
+        print('Total HMcode run time: {:.3f}s'.format(t_finish-t_start))
     return Pk_HMcode
 
 

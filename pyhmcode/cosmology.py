@@ -102,6 +102,8 @@ def _sigmaR_quad(R:float, Pk:callable) -> float:
     return sigma_func(R, Pk)
 
 
+def _sigmaV_integrand(k:float, Pk:callable):
+    return Pk(k)
 # def _sigmaV_integrand(t, Pk, alpha=3.):
 #     k = (-1.+1./t)**alpha
 #     return Pk(k)*k*alpha/(t*(1.-t))
@@ -119,28 +121,41 @@ def sigmaV(Pk:callable, eps=eps_sigmaV) -> float:
         eps: Integration accuracy
     '''
     kmin, kmax = 0., np.inf
-    sigmaV_squared, _ = integrate.quad(Pk, kmin, kmax, epsrel=eps, epsabs=eps)
+    #sigmaV_squared, _ = integrate.quad(Pk, kmin, kmax, epsrel=eps, epsabs=eps)
+    sigmaV_squared, _ = integrate.quad(lambda k: _sigmaV_integrand(k, Pk),  kmin, kmax, epsrel=eps, epsabs=eps)
     #sigmaV_squared, _ = integrate.quad(_sigmaV_integrand, 0., 1., args=(Pk,), epsabs=eps, epsrel=eps)
     sigmaV = np.sqrt(sigmaV_squared/(2.*np.pi**2))
     sigmaV /= np.sqrt(3.) # Convert from 3D displacement to 1D displacement
     return sigmaV
 
 
-def _dsigmaR_integrand(k:float, R:float, Pk) -> float:
+def _dsigmaR_integrand(k:float, R:float, Pk:callable) -> float:
     return Pk(k)*(k**3)*_Tophat_k(k*R)*_dTophat_k(k*R)
 
 
-def dlnsigma2_dlnR(R:float, Pk) -> float:
+def dlnsigma2_dlnR(R:float, Pk:callable) -> float:
     '''
     Calculates d(ln sigma^2)/d(ln R) by integration
+    3+neff = -d(ln sigma^2) / dR
     '''
-    def dsigmaR_vec(R, Pk):
-        kmin, kmax = 0., np.inf # Evaluate the integral and convert to a nicer form
-        dsigma, _ = integrate.quad(lambda k: _dsigmaR_integrand(k, R, Pk), kmin, kmax)
-        dsigma = R*dsigma/(np.pi*_sigmaR_quad(R, Pk))**2
-        return dsigma
-    dsigma_func = np.vectorize(dsigmaR_vec, excluded=['Pk'])
-    return dsigma_func(R, Pk)
+    # def dsigmaR_vec(R, Pk):
+    #     kmin, kmax = 0., np.inf # Evaluate the integral and convert to a nicer form
+    #     dsigma, _ = integrate.quad(lambda k: _dsigmaR_integrand(k, R, Pk), kmin, kmax)
+    #     dsigma = R*dsigma/(np.pi*_sigmaR_quad(R, Pk))**2
+    #     return dsigma
+    # dsigma_func = np.vectorize(dsigmaR_vec, excluded=['Pk'])
+    # return dsigma_func(R, Pk)
+    kmin, kmax = 0., np.inf # Evaluate the integral and convert to a nicer form
+    dsigma, _ = integrate.quad(lambda k: _dsigmaR_integrand(k, R, Pk), kmin, kmax)
+    dsigma = R*dsigma/(np.pi*_sigmaR_quad(R, Pk))**2
+    return dsigma
+
+
+def neff(R:float, Pk:callable) -> float:
+    '''
+    Effective index of the power spectrum at scale 'R'
+    '''
+    return -3.-dlnsigma2_dlnR(R, Pk)
 
 ### ###
 
