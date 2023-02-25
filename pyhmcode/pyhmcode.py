@@ -151,7 +151,7 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
 
         # Vanilla power spectrum calculation
         # TODO: Wasteful as this calculate the standard two-halo term unnecessarily
-        _, Pk_1h, _ = hmod.power_spectrum(k, Pk_lin, M, sigmaM, {'m': profile})
+        _, Pk_1h, _ = hmod.power_spectrum(k, Pk_lin, M, sigmaM, {'m': profile}, simple_twohalo=True)
 
         # HMcode tweaks
         P_wig = _get_Pk_wiggle(k, Pk_lin, CAMB_results)   # Isolate spectral wiggle; footnote 7

@@ -470,14 +470,14 @@ tests = ["asttokens", "littleutils", "pytest", "rich"]
 
 [[package]]
 name = "fastjsonschema"
-version = "2.16.2"
+version = "2.16.3"
 description = "Fastest Python implementation of JSON schema"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "fastjsonschema-2.16.2-py3-none-any.whl", hash = "sha256:21f918e8d9a1a4ba9c22e09574ba72267a6762d47822db9add95f6454e51cc1c"},
-    {file = "fastjsonschema-2.16.2.tar.gz", hash = "sha256:01e366f25d9047816fe3d288cbfc3e10541daf0af2044763f3d0ade42476da18"},
+    {file = "fastjsonschema-2.16.3-py3-none-any.whl", hash = "sha256:04fbecc94300436f628517b05741b7ea009506ce8f946d40996567c669318490"},
+    {file = "fastjsonschema-2.16.3.tar.gz", hash = "sha256:4a30d6315a68c253cfa8f963b9697246315aa3db89f98b97235e345dedfb0b8e"},
 ]
 
 [package.extras]
@@ -1666,14 +1666,14 @@ plugins = ["importlib-metadata"]
 
 [[package]]
 name = "pyhalomodel"
-version = "0.1.6"
+version = "0.1.7"
 description = "Halo model power spectrum calculations"
 category = "main"
 optional = false
 python-versions = ">=3.10,<3.12"
 files = [
-    {file = "pyhalomodel-0.1.6-py3-none-any.whl", hash = "sha256:e8961e0836268ffbeebd5a4723b0f694bc445e7770821fd09c77968c8dacdf7c"},
-    {file = "pyhalomodel-0.1.6.tar.gz", hash = "sha256:2fd97499029d5e12e3143eaa08c43cb681d05e312fabdd0f15cf698421370169"},
+    {file = "pyhalomodel-0.1.7-py3-none-any.whl", hash = "sha256:96f6a1fd1935b5c94317680388b10a5be930a60fe81b80839bf1061051dbd91c"},
+    {file = "pyhalomodel-0.1.7.tar.gz", hash = "sha256:715786e219292229abcf1e99d273e1a46fcc24b0460e156ac2b48a96bfd76f1c"},
 ]
 
 [package.dependencies]
