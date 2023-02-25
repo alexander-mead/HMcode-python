@@ -150,7 +150,6 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         profile = halo.profile.Fourier(k, M, Uk, amplitude=M*(1.-f_nu)/hmod.rhom, mass_tracer=True) # NOTE: Factor of 1-f_nu
 
         # Vanilla power spectrum calculation
-        # TODO: Wasteful as this calculate the standard two-halo term unnecessarily
         _, Pk_1h, _ = hmod.power_spectrum(k, Pk_lin, M, sigmaM, {'m': profile}, simple_twohalo=True)
 
         # HMcode tweaks
