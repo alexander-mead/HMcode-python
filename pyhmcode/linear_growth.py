@@ -67,6 +67,7 @@ def get_growth_interpolator(CAMB_results:camb.CAMBdata, LCDM=False) -> callable:
     '''
     Solve the linear growth ODE and returns an interpolating function for the solution
     LCDM = True forces w = -1 and imposes flatness by modifying the dark-energy density
+    TODO: w dependence for initial conditions; f here is correct for w=0 only
     '''
     from scipy.integrate import solve_ivp
     from scipy.interpolate import interp1d as interp

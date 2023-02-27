@@ -33,7 +33,7 @@ zs = [3., 2., 1., 0.5, 0.]
 zs = np.array(zs)
 
 # Number of cosmologies to generate
-ncos = 10
+ncos = 25
 
 # Seed random number generator
 rng = np.random.default_rng(seed=42)

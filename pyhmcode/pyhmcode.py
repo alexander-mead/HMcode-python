@@ -58,7 +58,11 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         print()
 
     # Linear power interpolator
-    Pk_lin_interp = CAMB_results.get_matter_power_interpolator(nonlinear=False, extrap_kmax=Pk_lin_extrap_kmax).P
+    interp, _, k_interp = CAMB_results.get_matter_power_interpolator(nonlinear=False, 
+                                                                     return_z_k=True,
+                                                                     extrap_kmax=Pk_lin_extrap_kmax)
+    Pk_lin_interp = interp.P
+    kmin = k_interp[0] # Minimum wavenumber used for the CAMB interpolator [h/Mpc]
 
     # Loop over redshift
     Pk_HMcode = np.zeros((len(zs), len(k)))
@@ -111,9 +115,10 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
             print('Peak height range: {:.4} -> {:.4}'.format(nu[0], nu[-1]))
 
         # Parameters of the linear spectrum pertaining to non-linear growth
+        # TODO: I think the sigmaV integral is quite time-consuming for some reason
         Rnl = _get_nonlinear_radius(R[0], R[-1], dc, iz, CAMB_results, cold=True) # Non-linear Lagrangian radius
         sigma8 = _get_sigmaR(8., iz, CAMB_results, cold=True)                     # RMS in the linear cold matter field at 8 Mpc/h
-        sigmaV = cosmology.sigmaV(0., lambda k: Pk_lin_interp(z, k))              # RMS in the linear displacement field
+        sigmaV = cosmology.sigmaV(0., lambda k: Pk_lin_interp(z, k), kmin=kmin)   # RMS in the linear displacement field
         neff = _get_effective_index(Rnl, R, sigmaM)                               # Effective index of spectrum at collapse scale
         if verbose:
             print('Non-linear Lagrangian radius: {:.4} Mpc/h'.format(Rnl))
