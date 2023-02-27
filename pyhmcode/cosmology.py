@@ -12,7 +12,7 @@ dc0 = (3./20.)*(12.*np.pi)**(2./3.) # delta_c = ~1.686' EdS linear collapse thre
 # Parameters
 xmin_Tk = 1e-5    # Scale at which to switch to Taylor expansion approximation in tophat Fourier functions
 eps_sigmaR = 1e-4 # Accuracy of the sigmaR integration
-eps_sigmaV = 1e-4 # Accuracy of the sigmaV integration NOTE: Seems to fail with higher accuracy (1e-4; when zs=[0] only?!?)
+eps_sigmaV = 1e-4 # Accuracy of the sigmaV integration
 eps_neff = 1e-4   # Accuracy of the neff integration (d ln sigma^2/d ln k)
 
 ### Backgroud ###
@@ -147,9 +147,9 @@ def sigmaV(R:float, Pk:callable, kmin=0., kmax=np.inf, eps=eps_sigmaV, transform
     '''
     Integration to get the 1D RMS in the linear displacement field
     TODO: This generates a warning sometimes, and is slow, there must be a cleverer way to integrate here.
-    Unless eps_sigmaV > 1e-3 the integration fails for z=0 sometimes, but not after being called for
-    z > 0. I really don't understand this, but it's annoying and should be fixed (kmin /= 0. helps).
-    I should look at how CAMB deals with these type of integrals (e.g., sigmaR).
+    TODO: Unless eps_sigmaV > 1e-3 the integration fails for z=0 sometimes, but not after being called for z > 0.
+    TODO: I really don't understand this, but it's annoying and should be fixed (kmin /= 0. helps).
+    TODO: I should look at how CAMB deals with these type of integrals (e.g., sigmaR).
     args:
         Pk: Function of k to evaluate the linear power spectrum
         eps: Integration accuracy

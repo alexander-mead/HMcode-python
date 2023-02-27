@@ -68,13 +68,14 @@ def get_growth_interpolator(CAMB_results:camb.CAMBdata, LCDM=False) -> callable:
     Solve the linear growth ODE and returns an interpolating function for the solution
     LCDM = True forces w = -1 and imposes flatness by modifying the dark-energy density
     TODO: w dependence for initial conditions; f here is correct for w=0 only
+    TODO: Could use d_init = a(1+(w-1)/(w(6w-5))*(Om_w/Om_m)*a**-3w) at early times with w = w(a<<1)
     '''
     from scipy.integrate import solve_ivp
     from scipy.interpolate import interp1d as interp
     na = 129 # Number of scale factors used to construct interpolator
     a = np.linspace(a_init, 1., na)
     f = 1.-_Omega_m(a_init, CAMB_results, LCDM=LCDM) # Early mass density
-    d_init = a_init**(1.-3.*f/5.) # Initial condition (~ a_init; but f factor accounts for EDE-ish)
+    d_init = a_init**(1.-3.*f/5.)            # Initial condition (~ a_init; but f factor accounts for EDE-ish)
     v_init = (1.-3.*f/5.)*a_init**(-3.*f/5.) # Initial condition (~ 1; but f factor accounts for EDE-ish)
     y0 = (d_init, v_init)
     def fun(a, y):
