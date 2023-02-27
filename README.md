@@ -2,7 +2,7 @@
 
 To whom it may concern,
 
-I coded this `Python` version of `HMcode-2020` ([Mead et al. 2021](https://arxiv.org/abs/2009.01858)) up quite quickly before leaving academia. It is written in pure `Python` and doesn't use any of the original Fortran code whatsoever. There is something amazing/dispiriting about coding something up in 3 days that previously took 5 years. A tragic last hoorah! At least I switched to `Python` eventually...
+I coded this `Python` version of `HMcode-2020` ([Mead et al. 2021](https://arxiv.org/abs/2009.01858)) up quite quickly before leaving academia in February 2023. It is written in pure `Python` and doesn't use any of the original Fortran code whatsoever. There is something amazing/dispiriting about coding something up in 3 days that previously took 5 years. A tragic last hoorah! At least I switched to `Python` eventually...
 
 You might also be interested in [`pyhalomodel`](https://pypi.org/project/pyhalomodel/), upon which this code depends, which implements a vanilla halo-model calculation for any desired large-scale-structure tracer. Alternatively, and very confusingly, you might be interested in this [`pyhmcode`](https://pypi.org/project/pyhmcode/), which provides a wrapper around the original `Fortran` `HMcode` implementation.
 
@@ -31,7 +31,7 @@ Using the actual cold matter spectrum is definitely an improvement from a theore
 I think any residual differences between codes must therefore stem from:
 - The BAO de-wiggling process (different `k` grids)
 - The $\sigma_\mathrm{v}$ numerical integration
-- The $n_{eff}$ calculation (numerical differentiation here; numerical integration in `CAMB-HMcode`)
+- The $n_\mathrm{eff}$ calculation (numerical differentiation here; numerical integration in `CAMB-HMcode`)
 - The $\sigma(R)$ numerical integration (using `CAMB` here; done internally in `CAMB-HMcode`)
 - The linear growth ODE solution
 - Root finding for the halo-collapse redshift and for $R_\mathrm{nl}$
