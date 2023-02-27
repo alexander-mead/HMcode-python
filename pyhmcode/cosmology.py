@@ -11,15 +11,17 @@ dc0 = (3./20.)*(12.*np.pi)**(2./3.) # delta_c = ~1.686' EdS linear collapse thre
 
 # Parameters
 xmin_Tk = 1e-5    # Scale at which to switch to Taylor expansion approximation in tophat Fourier functions
-eps_sigmaV = 1e-3 # Accuracy of the sigmaV integration NOTE: Seems to fail with higher accuracy
+eps_sigmaR = 1e-4 # Accuracy of the sigmaR integration
+eps_sigmaV = 1e-4 # Accuracy of the sigmaV integration NOTE: Seems to fail with higher accuracy
+eps_neff = 1e-4   # Accuracy of the neff integration (d ln sigma^2/d ln k)
 
 ### Backgroud ###
 
-def redshift_from_scalefactor(a):
+def redshift_from_scalefactor(a:float) -> float:
     return -1.+1./a
 
 
-def scalefactor_from_redshift(z):
+def scalefactor_from_redshift(z:float) -> float:
     return 1./(1.+z)
 
 
@@ -54,6 +56,27 @@ def Tk_EH_nowiggle(k:np.ndarray, h:float, wm:float, wb:float, T_CMB=2.725) -> np
     return Tk_nw
 
 
+def Tk_cold_ratio(k:np.ndarray, g:float, wm:float, h:float, f_nu:float, N_nu:int, T_CMB=2.725) -> np.ndarray:
+    '''
+    Ratio of cold to matter transfer function from Eistenstein & Hu (1999)
+    This can be used to get the cold-matter spectrum approximately from the matter spectrum
+    Captures the scale-dependent growth with neutrino free-streaming scale
+    '''
+    if f_nu == 0.: # Fix to unity if there are no neutrinos
+        Tk_cold_ratio = 1.
+    else:
+        pcb = (5.-np.sqrt(1.+24.*(1.-f_nu)))/4. # Growth exponent for unclustered neutrinos completely
+        BigT = T_CMB/2.7 # Big Theta for temperature
+        zeq = 2.5e4*wm*BigT**(-4) # Matter-radiation equality redshift
+        D = (1.+zeq)*g # Growth normalised such that D=(1.+z_eq)/(1+z) at early times
+        q = k*h*BigT**2/wm # Wave number relative to the horizon scale at equality (equation 5)
+        yfs = 17.2*f_nu*(1.+0.488*f_nu**(-7./6.))*(N_nu*q/f_nu)**2 # Free streaming scale (equation 14)
+        Dcb = (1.+(D/(1.+yfs))**0.7)**(pcb/0.7) # Cold growth functon
+        Dcbnu = ((1.-f_nu)**(0.7/pcb)+(D/(1.+yfs))**0.7)**(pcb/0.7) # Cold and neutrino growth function
+        Tk_cold_ratio = Dcb/Dcbnu # Finally, the ratio
+    return Tk_cold_ratio
+
+
 def _Tophat_k(x:np.ndarray) -> np.ndarray:
     '''
     Fourier transform of a tophat function.
@@ -74,56 +97,71 @@ def _dTophat_k(x:np.ndarray) -> np.ndarray:
     return np.where(np.abs(x)<xmin, -x/5.+x**3/70., (3./x**4)*((x**2-3.)*np.sin(x)+3.*x*np.cos(x)))
 
 
-def _sigmaR_integrand(k:np.array, R:float, Pk:callable) -> np.ndarray:
+def _transformed_integrand(t:np.ndarray, R:float, Pk:callable, integrand:callable, alpha=3.) -> np.ndarray:
+    '''
+    Transform an integral over k from 0 to infinity to one over t from 0 to 1
+    NOTE: This does not seem to help much when combined with scipy.integrate.quad
+    '''
+    kR = (-1.+1./t)**alpha
+    k = kR if R == 0. else kR/R
+    return integrand(k, R, Pk)*k*alpha/(t*(1.-t))
+
+
+def _sigmaR_integrand(k:np.ndarray, R:float, Pk:callable) -> np.ndarray:
     '''
     Integrand for calculating sigma(R)
-    Note that k can be a float or an arraay here
-    args:
-        k: Fourier wavenumber (or array of these) [h/Mpc]
-        R: Comoving Lagrangian radius [Mpc/h]
-        Pk: Function of k to evaluate the linear power spectrum
+    Note that k can be a float or an array here
     '''
     return Pk(k)*(k**2)*_Tophat_k(k*R)**2
  
 
-def _sigmaR_quad(R:float, Pk:callable) -> float:
+def sigmaR(R:np.ndarray, Pk:callable, eps=eps_sigmaR, transform_integrand=False) -> np.ndarray:
     '''
-    Quad integration
+    Quad integration TODO: This is slow, there must be something better to do
     args:
         R: Comoving Lagrangian radius [Mpc/h]
         Pk: Function of k to evaluate the linear power spectrum
     '''
     def sigmaR_vec(R:float, Pk:callable):
-        kmin, kmax = 0., np.inf
-        sigma_squared, _ = integrate.quad(lambda k: _sigmaR_integrand(k, R, Pk), kmin, kmax)
-        sigma = np.sqrt(sigma_squared/(2.*np.pi**2))
-        return sigma
-    sigma_func = np.vectorize(sigmaR_vec, excluded=['Pk'])
-    return sigma_func(R, Pk)
+        if transform_integrand:
+             sigmaR_squared, _ = integrate.quad(lambda t: _transformed_integrand(t, R, Pk, _sigmaR_integrand), 
+                                                0., 1., epsabs=eps, epsrel=eps)
+        else:
+            kmin, kmax = 0., np.inf
+            sigmaR_squared, _ = integrate.quad(lambda k: _sigmaR_integrand(k, R, Pk), 
+                                               kmin, kmax, epsabs=eps, epsrel=eps)
+        sigmaR = np.sqrt(sigmaR_squared/(2.*np.pi**2))
+        return sigmaR
+    sigmaR_func = np.vectorize(sigmaR_vec, excluded=['Pk'])
+    return sigmaR_func(R, Pk)
 
 
-def _sigmaV_integrand(k:float, Pk:callable):
-    return Pk(k)
-# def _sigmaV_integrand(t, Pk, alpha=3.):
-#     k = (-1.+1./t)**alpha
-#     return Pk(k)*k*alpha/(t*(1.-t))
+def _sigmaV_integrand(k:np.ndarray, R:float, Pk:callable) -> np.ndarray:
+    if R == 0.:
+        integrand = Pk(k)
+    else:
+        integrand = Pk(k)*_Tophat_k(k*R)**2
+    return integrand
 
 
-def sigmaV(Pk:callable, eps=eps_sigmaV) -> float:
+def sigmaV(R:float, Pk:callable, eps=eps_sigmaV, transform_integrand=False) -> float:
     '''
-    Quad integration; R=0
+    Integration to get the 1D RMS in the linear displacement field
     TODO: This generates a warning sometimes, there must be a cleverer way to integrate here.
     Unless eps_sigmaV > 1e-3 the integration fails for z=0 sometimes, but not after being called for
-    z > 0. I really don't understaand this, but it's annoying and should be fixed.
+    z > 0. I really don't understand this, but it's annoying and should be fixed.
     I should look at how CAMB deals with these type of integrals (e.g., sigmaR).
     args:
         Pk: Function of k to evaluate the linear power spectrum
         eps: Integration accuracy
     '''
-    kmin, kmax = 0., np.inf
-    #sigmaV_squared, _ = integrate.quad(Pk, kmin, kmax, epsrel=eps, epsabs=eps)
-    sigmaV_squared, _ = integrate.quad(lambda k: _sigmaV_integrand(k, Pk),  kmin, kmax, epsrel=eps, epsabs=eps)
-    #sigmaV_squared, _ = integrate.quad(_sigmaV_integrand, 0., 1., args=(Pk,), epsabs=eps, epsrel=eps)
+    if transform_integrand:
+        sigmaV_squared, _ = integrate.quad(lambda t: _transformed_integrand(t, R, Pk, _sigmaV_integrand), 
+                                           0., 1., epsabs=eps, epsrel=eps)
+    else:
+        kmin, kmax = 0., np.inf
+        sigmaV_squared, _ = integrate.quad(lambda k: _sigmaV_integrand(k, R, Pk), 
+                                           kmin, kmax, epsabs=eps, epsrel=eps)
     sigmaV = np.sqrt(sigmaV_squared/(2.*np.pi**2))
     sigmaV /= np.sqrt(3.) # Convert from 3D displacement to 1D displacement
     return sigmaV
@@ -133,21 +171,20 @@ def _dsigmaR_integrand(k:float, R:float, Pk:callable) -> float:
     return Pk(k)*(k**3)*_Tophat_k(k*R)*_dTophat_k(k*R)
 
 
-def dlnsigma2_dlnR(R:float, Pk:callable) -> float:
+def _dlnsigma2_dlnR(R:float, Pk:callable, eps=eps_neff, transform_integrand=False) -> float:
     '''
     Calculates d(ln sigma^2)/d(ln R) by integration
     3+neff = -d(ln sigma^2) / dR
+    TODO: Vectorize
     '''
-    # def dsigmaR_vec(R, Pk):
-    #     kmin, kmax = 0., np.inf # Evaluate the integral and convert to a nicer form
-    #     dsigma, _ = integrate.quad(lambda k: _dsigmaR_integrand(k, R, Pk), kmin, kmax)
-    #     dsigma = R*dsigma/(np.pi*_sigmaR_quad(R, Pk))**2
-    #     return dsigma
-    # dsigma_func = np.vectorize(dsigmaR_vec, excluded=['Pk'])
-    # return dsigma_func(R, Pk)
-    kmin, kmax = 0., np.inf # Evaluate the integral and convert to a nicer form
-    dsigma, _ = integrate.quad(lambda k: _dsigmaR_integrand(k, R, Pk), kmin, kmax)
-    dsigma = R*dsigma/(np.pi*_sigmaR_quad(R, Pk))**2
+    if transform_integrand:
+        dsigma, _ = integrate.quad(lambda t: _transformed_integrand(t, R, Pk, _dsigmaR_integrand), 
+                                   0., 1., epsabs=eps, epsrel=eps)
+    else:
+        kmin, kmax = 0., np.inf # Evaluate the integral and convert to a nicer form
+        dsigma, _ = integrate.quad(lambda k: _dsigmaR_integrand(k, R, Pk), 
+                                   kmin, kmax, epsabs=eps, epsrel=eps)
+    dsigma = R*dsigma/(np.pi*sigmaR(R, Pk))**2
     return dsigma
 
 
@@ -155,7 +192,7 @@ def neff(R:float, Pk:callable) -> float:
     '''
     Effective index of the power spectrum at scale 'R'
     '''
-    return -3.-dlnsigma2_dlnR(R, Pk)
+    return -3.-_dlnsigma2_dlnR(R, Pk)
 
 ### ###
 

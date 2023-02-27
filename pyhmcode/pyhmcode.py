@@ -12,7 +12,8 @@ from . import cosmology
 from . import linear_growth
 
 # Parameters
-Pk_lin_extrap_kmax = 1e10 # TODO: This interplays with the sigmaV integration in a disconcerting way
+Pk_lin_extrap_kmax = 1e10 # NOTE: This interplays with the sigmaV integration in a disconcerting way
+sigma_cold_approx = False # Should the Eisenstein & Hu (1999) approximation be used for the cold transfer function?
 
 def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, 
            Mmin=1e0, Mmax=1e18, nM=256, verbose=False) -> np.ndarray:
@@ -97,10 +98,13 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         # This means that the *cold* linear spectrum and the *cold* field variance are
         # *greater* than the corresponding quantities for the total matter field on scales where
         # massive neutrinos are smoothly distributed
-        Pk_lin = Pk_lin_interp(z, k)                         # Linear power spectrum
-        R = hmod.Lagrangian_radius(M)                        # Lagrangian radii
-        sigmaM = _get_sigmaR(R, iz, CAMB_results, cold=True) # Variance in cold matter field
-        nu = hmod._peak_height(M, sigmaM)                    # Halo peak height
+        Pk_lin = Pk_lin_interp(z, k)  # Linear power spectrum
+        R = hmod.Lagrangian_radius(M) # Lagrangian radii
+        if sigma_cold_approx: # Variance in cold matter field
+            sigmaM = _get_sigmaR_approx(R, g, lambda k: Pk_lin_interp(z, k), CAMB_results, cold=True)
+        else:
+            sigmaM = _get_sigmaR(R, iz, CAMB_results, cold=True) 
+        nu = hmod._peak_height(M, sigmaM) # Halo peak height
         if verbose:
             print('Lagrangian radius range: {:.4} -> {:.4} Mpc/h'.format(R[0], R[-1]))
             print('RMS in matter field range: {:.4} -> {:.4}'.format(sigmaM[0], sigmaM[-1]))
@@ -109,9 +113,8 @@ def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         # Parameters of the linear spectrum pertaining to non-linear growth
         Rnl = _get_nonlinear_radius(R[0], R[-1], dc, iz, CAMB_results, cold=True) # Non-linear Lagrangian radius
         sigma8 = _get_sigmaR(8., iz, CAMB_results, cold=True)                     # RMS in the linear cold matter field at 8 Mpc/h
-        sigmaV = cosmology.sigmaV(lambda k: Pk_lin_interp(z, k))                  # RMS in the linear displacement field
+        sigmaV = cosmology.sigmaV(0., lambda k: Pk_lin_interp(z, k))              # RMS in the linear displacement field
         neff = _get_effective_index(Rnl, R, sigmaM)                               # Effective index of spectrum at collapse scale
-
         if verbose:
             print('Non-linear Lagrangian radius: {:.4} Mpc/h'.format(Rnl))
             print('RMS in matter field at 8 Mpc/h: {:.4}'.format(sigma8))
@@ -194,6 +197,20 @@ def _get_Pk_wiggle(k:np.ndarray, Pk_lin:np.ndarray, CAMB_results:camb.CAMBdata, 
 def _get_sigmaR(R:np.ndarray, iz:int, CAMB_results:camb.CAMBdata, cold=False) -> np.ndarray:
     var='delta_nonu' if cold else 'delta_tot'
     sigmaR = CAMB_results.get_sigmaR(R, z_indices=[iz], var1=var, var2=var)[0]
+    return sigmaR
+
+
+def _get_sigmaR_approx(R, g, Pk_lin_interp, CAMB_results:camb.CAMBdata, cold=False):
+    if cold:
+        wm = CAMB_results.Params.omch2+CAMB_results.Params.ombh2+CAMB_results.Params.omnuh2
+        h = CAMB_results.Params.h
+        f_nu = CAMB_results.Params.omnuh2/wm
+        N_nu = CAMB_results.Params.num_nu_massive
+        T_CMB = CAMB_results.Params.TCMB
+        Pk_interp = lambda k: Pk_lin_interp(k)*cosmology.Tk_cold_ratio(k, g, wm, h, f_nu, N_nu, T_CMB)**2
+    else:
+        Pk_interp = Pk_lin_interp
+    sigmaR = cosmology.sigmaR(R, Pk_interp, transform_integrand=False)
     return sigmaR
 
 
