@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyhmcode"
-version = "0.1.0"
+version = "1.0.0"
 description = "Pure Python implementation of HMcode"
 authors = ["Alexander Mead <alexander.j.mead@googlemail.com>"]
 license = "MIT"
