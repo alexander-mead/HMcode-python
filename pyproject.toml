@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pyhmcode"
+name = "hmcode"
 version = "1.0.0"
 description = "Pure Python implementation of HMcode"
 authors = ["Alexander Mead <alexander.j.mead@googlemail.com>"]

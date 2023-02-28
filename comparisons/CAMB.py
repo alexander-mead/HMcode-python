@@ -3,9 +3,9 @@ import sys
 import numpy as np
 
 # Project imports
-import pyhmcode.camb_stuff as camb_stuff
-import pyhmcode.utility as util
-from pyhmcode import hmcode as HMcode
+import hmcode
+import hmcode.camb_stuff as camb_stuff
+import hmcode.utility as util
 
 # Vary these parameters
 vary_Omega_k = True
@@ -70,7 +70,7 @@ for icos in range(ncos):
         Pk_CAMB[iz, :] = Pk_nonlin_interp(z, k)
 
     # Get the new pyHMcode spectrum
-    Pk_HMcode = HMcode(k, zs, results, verbose=verbose)
+    Pk_HMcode = hmcode.power(k, zs, results, verbose=verbose)
 
     # Calculate maximum deviation between pyHMcode and the version in CAMB
     max_error = np.max(np.abs(-1.+Pk_HMcode/Pk_CAMB))

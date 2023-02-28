@@ -2,9 +2,9 @@
 import numpy as np
 
 # Project imports
-from pyhmcode import hmcode as HMcode
-import pyhmcode.utility as util
-import pyhmcode.camb_stuff as camb_stuff
+import hmcode
+import hmcode.utility as util
+import hmcode.camb_stuff as camb_stuff
 
 # Vary these parameters
 vary_Omega_k = True
@@ -64,7 +64,7 @@ for icos in range(ncos):
     _, results, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa)
 
     # Get the pyHMcode spectrum
-    Pk_HMcode = HMcode(k, zs, results)
+    Pk_HMcode = hmcode.power(k, zs, results)
     data = np.vstack((k, Pk_HMcode))
     outfile = f'benchmarks/cosmology_{icos}.dat'
     with open(outfile, 'x') as f:

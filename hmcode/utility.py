@@ -1,7 +1,6 @@
 # Standard imports
 import numpy as np
 
-
 def derivative_from_samples(x:float, xs:np.array, fs:np.array) -> float:
     '''
     Calculates the derivative of the function f(x) which is sampled as fs at values xs

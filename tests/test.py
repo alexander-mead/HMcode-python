@@ -3,8 +3,8 @@ import numpy as np
 import unittest
 
 # Project imports
-from pyhmcode import hmcode as HMcode
-import pyhmcode.camb_stuff as camb_stuff
+import hmcode
+import hmcode.camb_stuff as camb_stuff
 
 ### Test data ###
 
@@ -33,7 +33,7 @@ for icos in range(ncos):
     _, results, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa)
 
     # Get the pyHMcode spectrum
-    Pk_HMcode = HMcode(k, zs, results)
+    Pk_HMcode = hmcode.power(k, zs, results)
     data.append(Pk_HMcode)
 
     # Write cosmological parameters and  to screen

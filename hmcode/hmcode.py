@@ -15,14 +15,17 @@ from . import linear_growth
 Pk_lin_extrap_kmax = 1e10 # NOTE: This interplays with the sigmaV integration in a disconcerting way
 sigma_cold_approx = False # Should the Eisenstein & Hu (1999) approximation be used for the cold transfer function?
 
-def hmcode(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, 
-           Mmin=1e0, Mmax=1e18, nM=256, verbose=False) -> np.ndarray:
+def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, 
+          Mmin=1e0, Mmax=1e18, nM=256, verbose=False) -> np.ndarray:
     '''
     Calculates the HMcode matter-matter power spectrum
     Args:
         k: Array of comoving wavenumbers [h/Mpc]
         zs: Array of redshifts (ordered from high to low)
         CAMB_results: CAMBdata structure
+        Mmin: Minimum mass for the halo-model calculation [Msun/h]
+        Mmax: Maximum mass for the halo-model calculation [Msun/h]
+        nM: Number of mass bins for the halo-model calculation
     Returns:
         Array of matter power spectra: Pk[z, k]
     '''
