@@ -1,15 +1,54 @@
-## HMcode
+# HMcode
+
+A pure-`Python` implementation of the `HMcode-2020` method ([Mead et al. 2021](https://arxiv.org/abs/2009.01858)) for computing accurate non-linear matter power spectra across a wide range of cosmological parameters for $w(a)$-CDM models including curvature and massive neutrinos.
+
+## Installation
+
+Either
+```
+pip install hmcode
+```
+or, if you want to edit the code, use the demo notebook, or run the tests or consistency checks, then clone the repository, `cd` into the directory, and then
+```
+poetry install
+```
+to create a virtual environment with everything you need to get going.
+
+## Dependencies
+
+- `numpy`
+- `scipy`
+- `camb`
+- `pyhalomodel`
+
+## Use
+
+```
+import numpy as np
+import camb
+import hmcode
+
+# Ranges
+k = np.logspace(-3, 1, 100) # Wavenumbers [h/Mpc]
+zs = [3., 2., 1., 0.5, 0.]  # Redshifts
+
+# Run CAMB
+parameters = camb.CAMBparams(WantCls=False)
+parameters.set_cosmology(H0=70.)
+parameters.set_matter_power(redshifts=zs, kmax=100.) # kmax should be much larger than the wavenumber of interest
+results = camb.get_results(parameters)
+
+# HMcode
+Pk = hmcode.power(k, zs, results)
+```
+
+## Note
 
 To whom it may concern,
 
 I coded this `Python` version of `HMcode-2020` ([Mead et al. 2021](https://arxiv.org/abs/2009.01858)) up quite quickly before leaving academia in February 2023. It is written in pure `Python` and doesn't use any of the original Fortran code whatsoever. There is something amazing/dispiriting about coding something up in 3 days that previously took 5 years. A tragic last hoorah! At least I switched to `Python` eventually...
 
 You might also be interested in [`pyhalomodel`](https://pypi.org/project/pyhalomodel/), upon which this code depends, which implements a vanilla halo-model calculation for any desired large-scale-structure tracer. Alternatively, and very confusingly, you might be interested in this [`pyhmcode`](https://pypi.org/project/pyhmcode/), which provides a wrapper around the original `Fortran` `HMcode` implementation.
-
-To install, clone the repository, `cd` into the directory, and then
-```
-poetry install
-```
 
 I compared it against the `CAMB-HMcode` version for 100 random sets of cosmological parameters ($k < 10 h\mathrm{Mpc}^{-1}$; $z < 3$). The level of agreement between the two codes is as follows:
 - LCDM: Mean error: 0.10%; Std error: 0.03%; Worst error; 0.21%
