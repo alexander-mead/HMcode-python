@@ -1,5 +1,7 @@
 # HMcode
 
+![image](https://user-images.githubusercontent.com/9140961/228345397-f33d2f94-e8e4-4eb0-9fc9-9b27df407fbc.png)
+
 A pure-`Python` implementation of the `HMcode-2020` method ([Mead et al. 2021](https://arxiv.org/abs/2009.01858)) for computing accurate non-linear matter power spectra across a wide range of cosmological parameters for $w(a)$-CDM models including curvature and massive neutrinos.
 
 ## Installation
