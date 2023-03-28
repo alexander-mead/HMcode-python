@@ -7,12 +7,12 @@ A pure-`Python` implementation of the `HMcode-2020` method ([Mead et al. 2021](h
 ## Installation
 
 Either
-```
-pip install hmcode
+```bash
+> pip install hmcode
 ```
 or, if you want to edit the code, use the demo notebook, or run the tests or consistency checks, then clone the repository, `cd` into the directory, and then
-```
-poetry install
+```bash
+> poetry install
 ```
 to create a virtual environment with everything you need to get going.
 
