@@ -33,6 +33,7 @@ import hmcode
 # Ranges
 k = np.logspace(-3, 1, 100) # Wavenumbers [h/Mpc]
 zs = [3., 2., 1., 0.5, 0.]  # Redshifts
+T_AGN = 10**7.8             # Feedback temperature [K]
 
 # Run CAMB
 parameters = camb.CAMBparams(WantCls=False)
@@ -41,7 +42,7 @@ parameters.set_matter_power(redshifts=zs, kmax=100.) # kmax should be much large
 results = camb.get_results(parameters)
 
 # HMcode
-Pk = hmcode.power(k, zs, results)
+Pk = hmcode.power(k, zs, results, T_AGN)
 ```
 
 ## Note
@@ -80,7 +81,7 @@ I think any residual differences between codes must therefore stem from:
 But I didn't have time to investigate these differences more thoroughly. Note that there are accuracy parameters in `CAMB-HMcode` fixed at the $10^{-4}$ level, so you would never expect better than 0.01% agreement. Given that `HMcode` is only accurate at the ~2.5% level compared to simulated power spectra, the level of agreement between the codes seems okay to me, with the caveats above regarding very massive neutrinos.
 
 While writing this code I had a few ideas for future improvements:
-- Add the `HMcode-2020` baryon-feedback model; this would not be too hard for the enthusiastic student/postdoc.
+- ~~Add the `HMcode-2020` baryon-feedback model; this would not be too hard for the enthusiastic student/postdoc.~~ (Thanks Laila Linke!)
 - The predictions are a bit sensitive to the smoothing $\sigma$ used for the dewiggling. This should probably be a fitted parameter.
 - It's annoying having to calculate linear growth functions (all, LCDM), especially since the linear growth doesn't really exist. One should probably use the $P(k)$ amplitude evolution over time at some cleverly chosen scale instead, or instead the evolution of $\sigma(R)$ over time at some pertinent $R$ value. Note that the growth factors are *only* used to calculate the [Dolag et al. (2004)](https://arxiv.org/abs/astro-ph/0309771) correction and [Mead (2017)](https://arxiv.org/abs/1606.05345) $\delta_\mathrm{c}$, $\Delta_\mathrm{v}$.
 - I never liked the halo bloating parameter, it's hard to understand the effect of modifying halo profiles in Fourier space. Someone should get rid of this (maybe modify the halo mass function instead?).

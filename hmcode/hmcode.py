@@ -157,7 +157,7 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN=None,
         else: # Use vanilla-ish halo model if no HMcode tweaks used
             B, eta = 4., 0.
 
-        if T_AGN:
+        if T_AGN and not tweaks:
             B = feedback_params['B0']*np.power(10, z*feedback_params['Bz'])
             Mb = feedback_params['Mb0']*np.power(10, z*feedback_params['Mbz'])
             fstar = feedback_params['f0']*np.power(10, z*feedback_params['fz'])
@@ -171,7 +171,7 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN=None,
                 print('Halo bloating; eta: {:.4}'.format(eta))
                 print('Minimum halo concentration; B: {:.4}'.format(B))#, B/4.)
                 print('Transition smoothing; alpha: {:.4}'.format(alpha))
-            if T_AGN:
+            if T_AGN and not tweaks:
                 print('Gas-loss halo-mass parameter Mb: {:1e}'.format(Mb))
                 print('Effective halo stellar-mass fraction f*: {:.4f}'.format(f))
             print()
@@ -186,11 +186,11 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN=None,
         rv = hmod.virial_radius(M) 
         Uk = np.ones((len(k), len(M)))
         for iM, (_rv, _c, _nu) in enumerate(zip(rv, c, nu)): # TODO: Remove loop for speed?
-            if T_AGN:
+            if T_AGN and not tweaks:
                 Uk[:, iM] = _win_NFW_baryons(k*(_nu**eta), _rv, _c, M[iM], Mb, fstar, Om_m, Om_c, Om_b)[:, 0]
             else:
                 Uk[:, iM] = _win_NFW(k*(_nu**eta), _rv, _c)[:, 0]
-        if T_AGN: # NOTE: No Factor of 1-f_nu for baryonic, because this effect is already included!
+        if T_AGN and not tweaks: # NOTE: No Factor of 1-f_nu for baryonic, because this effect is already included!
             profile = halo.profile.Fourier(k, M, Uk, amplitude=M/hmod.rhom, mass_tracer=True) 
         else: # NOTE: Factor of 1-f_nu in profile amplitude
             profile = halo.profile.Fourier(k, M, Uk, amplitude=M*(1.-f_nu)/hmod.rhom, mass_tracer=True) 
@@ -209,7 +209,7 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN=None,
             Pk_hm = Pk_lin+_Pk_1h['m-m']
         Pk_HMcode[iz, :] = Pk_hm
 
-    if tweaks and T_AGN:
+    if T_AGN and tweaks:
         suppression = _get_feedback_suppression(k, zs, CAMB_results, T_AGN, Mmin=Mmin, Mmax=Mmax, nM=nM, verbose=False)
         Pk_HMcode *= suppression
 

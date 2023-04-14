@@ -1,8 +1,5 @@
-# Standard imports
+# Third-party imports
 import numpy as np
-
-import sys
-sys.path.append("../")
 
 # Project imports
 import hmcode
@@ -62,7 +59,7 @@ for icos in range(ncos):
     T_AGN = np.power(10, T_AGN)
 
     print('Cosmology: {:d}; (Om_c, Om_b, Om_k, h, ns, sig8, w0, wa, m_nu, log10(T_AGN)) = \
-({:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2e})'
+({:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2})'
 .format(icos, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, w0, wa, m_nu, np.log10(T_AGN)))
     cosmologies.append([Omega_c, Omega_b, Omega_k, h, ns, sigma_8, w0, wa, m_nu, T_AGN])
 
@@ -70,12 +67,12 @@ for icos in range(ncos):
     _, results, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa)
 
     # Get the pyHMcode baryon suppression
-    Supp_HMcode = hmcode.get_Baryon_Suppression(k, zs, results, T_AGN)
+    Supp_HMcode = hmcode.hmcode._get_feedback_suppression(k, zs, results, T_AGN)
     data = np.vstack((k, Supp_HMcode))
-    outfile = f'benchmarks_baryons/cosmology_{icos}.dat'
+    outfile = f'benchmarks_feedback/cosmology_{icos}.dat'
     with open(outfile, 'x') as f:
         np.savetxt(f, data, header='k [h/Mpc]; P_bar/P_dmo(k) at z = [3, 2, 1, 0.5, 0]')
 
-outfile = 'benchmarks_baryons/cosmologies.txt'
+outfile = 'benchmarks_feedback/cosmologies.txt'
 with open(outfile, 'x') as f:
     np.savetxt(f, cosmologies, header='Om_c, Om_b, Om_k, h, ns, sig8, w0, wa, m_nu, T_AGN')

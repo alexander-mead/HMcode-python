@@ -1,6 +1,8 @@
 # Standard imports
-import numpy as np
 import unittest
+
+# Third-party imports
+import numpy as np
 
 # Project imports
 import hmcode
