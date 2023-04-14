@@ -1,8 +1,6 @@
 # Standard imports
 import numpy as np
 import unittest
-import sys
-sys.path.append("../")
 
 # Project imports
 import hmcode
@@ -35,7 +33,7 @@ for icos in range(ncos):
     _, results, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa)
 
     # Get the pyHMcode spectrum
-    Supp_HMcode = hmcode.get_Baryon_Suppression(k, zs, results, T_AGN)
+    Supp_HMcode = hmcode.get_feedback_suppression(k, zs, results, T_AGN)
     data.append(Supp_HMcode)
 
     # Write cosmological parameters and  to screen
@@ -43,6 +41,24 @@ for icos in range(ncos):
     print('Cosmology: {:d}; (Om_c, Om_b, Om_k, h, ns, sig8, w0, wa, m_nu, T_AGN) = \
 ({:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2e}); \
 maximum deviation: {:.4%}'.format(icos, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, w0, wa, m_nu, T_AGN, max_deviation))
+    
+### Tests ###
+
+class TestPower(unittest.TestCase):
+
+    @staticmethod
+    def test():
+        for benchmark, datum in zip(benchmarks, data):
+            np.testing.assert_array_almost_equal(datum/benchmark, 1., decimal=5)
+
+## ###
+
+## Unittest ###
+
+if __name__ == '__main__':
+    unittest.main()
+
+## ###
 
 
 

@@ -1,8 +1,8 @@
 # Standard imports
-import numpy as np
 from time import time
 
 # Third-party imports
+import numpy as np
 import camb
 import pyhalomodel as halo
 
@@ -15,21 +15,19 @@ from . import linear_growth
 Pk_lin_extrap_kmax = 1e10 # NOTE: This interplays with the sigmaV integration in a disconcerting way
 sigma_cold_approx = False # Should the Eisenstein & Hu (1999) approximation be used for the cold transfer function?
 
-def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, 
-          Mmin=1e0, Mmax=1e18, nM=256, verbose=False, 
-          baryons=False, baryon_params=None, hmcodetweaks=True) -> np.ndarray:
+def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN=None,
+          Mmin=1e0, Mmax=1e18, nM=256, tweaks=True, verbose=False) -> np.ndarray:
     '''
     Calculates the HMcode matter-matter power spectrum
     Args:
         k: Array of comoving wavenumbers [h/Mpc]
         zs: Array of redshifts (ordered from high to low)
         CAMB_results: CAMBdata structure
+        T_AGN: AGN feedback temperature [K] (None to disable)
         Mmin: Minimum mass for the halo-model calculation [Msun/h]
         Mmax: Maximum mass for the halo-model calculation [Msun/h]
         nM: Number of mass bins for the halo-model calculation
-        baryons: if true: include baryonic effects from HMCode2020; if false: Dark Matter Only
-        baryon_params: Dictionary containing the 6 baryonic parameters from HMCode2020
-        hmcodetweaks: if true: Use the changes to the vanilla halo model from HMCode2020; if false: Use vanilla halo model
+        tweaks: Use the changes to the vanilla halo model from HMCode2020 if true
     Returns:
         Array of matter power spectra: Pk[z, k]
     '''
@@ -37,7 +35,7 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
     # Checks
     if verbose: t_start = time()
     if not util.is_array_monotonic(-np.array(zs)):
-        raise ValueError('Redshift must be monotonically decreasing')
+        raise ValueError('Redshifts must be monotonically decreasing')
 
     # Halo mass range
     M = util.logspace(Mmin, Mmax, nM)
@@ -64,15 +62,19 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         print('Linear growth at z=0: {:.3}'.format(growth(1.)))
         print()
 
-    if verbose and baryons:
-        print("Using baryonic feedback model from HMCode2020")
-        print("B0: {:.4f}".format(baryon_params["B0"]))
-        print("Bz: {:.4f}".format(baryon_params["Bz"]))
-        print("Mb0: {:.1e}".format(baryon_params["Mb0"]))
-        print("Mbz: {:.4f}".format(baryon_params["Mbz"]))
-        print("f*0: {:.4f}".format(baryon_params["f0"]))
-        print("f*z: {:.4f}".format(baryon_params["fz"]))
-        print()
+    # Baryonic feedback
+    if T_AGN:
+        feedback_params = _get_feedback_parameters(T_AGN)
+        if verbose:
+            print('Using baryonic feedback model from HMCode2020')
+            print('log_10(T_AGN/K): {:.2f}'.format(np.log10(T_AGN)))
+            print('B_0: {:.4f}'.format(feedback_params['B0']))
+            print('B_z: {:.4f}'.format(feedback_params['Bz']))
+            print('Mb_0: {:.1e}'.format(feedback_params['Mb0']))
+            print('Mb_z: {:.4f}'.format(feedback_params['Mbz']))
+            print('f*_0: {:.4f}'.format(feedback_params['f0']))
+            print('f*_z: {:.4f}'.format(feedback_params['fz']))
+            print()
 
     # Linear power interpolator
     interp, _, k_interp = CAMB_results.get_matter_power_interpolator(nonlinear=False, 
@@ -144,46 +146,36 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
             print('RMS in matter displacement field: {:.4} Mpc/h'.format(sigmaV))
             print('Effective index at collapse scale: {:.4}'.format(neff))
 
-        # HMcode parameters (Table 2 of https://arxiv.org/pdf/2009.01858.pdf)
-        kd = 0.05699*sigma8**-1.089  # Two-halo damping wavenumber; equation (16)
-        f = 0.2696*sigma8**0.9403    # Two-halo fractional damping; equation (16)
-        nd = 2.853                   # Two-halo damping power; equation (16)
-        ks = 0.05618*sigma8**-1.013  # One-halo damping wavenumber; equation (17)
-        eta = 0.1281*sigma8**-0.3644 # Halo bloating parameter; equation (19)
-        B =   5.196                    # Minimum halo concentration; equation (20)
-        alpha = 1.875*(1.603)**neff  # Transition smoothing; equation (23)
+        if tweaks: # HMcode parameters (Table 2 of https://arxiv.org/pdf/2009.01858.pdf)
+            kd = 0.05699*sigma8**-1.089  # Two-halo damping wavenumber; equation (16)
+            f = 0.2696*sigma8**0.9403    # Two-halo fractional damping; equation (16)
+            nd = 2.853                   # Two-halo damping power; equation (16)
+            ks = 0.05618*sigma8**-1.013  # One-halo damping wavenumber; equation (17)
+            eta = 0.1281*sigma8**-0.3644 # Halo bloating parameter; equation (19)
+            B =   5.196                  # Minimum halo concentration; equation (20)
+            alpha = 1.875*(1.603)**neff  # Transition smoothing; equation (23)
+        else: # Use vanilla-ish halo model if no HMcode tweaks used
+            B, eta = 4., 0.
 
-        
-        if hmcodetweaks==False: #Go to vanilla halo model if no hmcode tweaks should be used
-            B=4
-            eta=0
-            alpha=1
+        if T_AGN:
+            B = feedback_params['B0']*np.power(10, z*feedback_params['Bz'])
+            Mb = feedback_params['Mb0']*np.power(10, z*feedback_params['Mbz'])
+            fstar = feedback_params['f0']*np.power(10, z*feedback_params['fz'])
 
-        if verbose and hmcodetweaks:
-           print('Two-halo damping wavenumber; kd: {:.4} h/Mpc'.format(kd))
-           print('Two-halo fractional damping; f: {:.4}'.format(f))
-           print('Two-halo damping power; nd: {:.4}'.format(nd))
-           print('One-halo damping wavenumber; k*: {:.4} h/Mpc'.format(ks))
-           print('Halo bloating; eta: {:.4}'.format(eta))
-           print('Minimum halo concentration; B: {:.4}'.format(B))#, B/4.)
-           print('Transition smoothing; alpha: {:.4}'.format(alpha))
-           print()
-        elif verbose:
-            print("Using vanilla halo model")
+        if verbose:
+            if tweaks:
+                print('Two-halo damping wavenumber; kd: {:.4} h/Mpc'.format(kd))
+                print('Two-halo fractional damping; f: {:.4}'.format(f))
+                print('Two-halo damping power; nd: {:.4}'.format(nd))
+                print('One-halo damping wavenumber; k*: {:.4} h/Mpc'.format(ks))
+                print('Halo bloating; eta: {:.4}'.format(eta))
+                print('Minimum halo concentration; B: {:.4}'.format(B))#, B/4.)
+                print('Transition smoothing; alpha: {:.4}'.format(alpha))
+            if T_AGN:
+                print('Gas-loss halo-mass parameter Mb: {:1e}'.format(Mb))
+                print('Effective halo stellar-mass fraction f*: {:.4f}'.format(f))
+            print()
 
-        if baryons:
-            B=baryon_params["B0"]*np.power(10,z*baryon_params["Bz"])
-            Mb=baryon_params["Mb0"]*np.power(10, z*baryon_params["Mbz"])
-            fstar=baryon_params["f0"]*np.power(10, z*baryon_params["fz"])
-        
-
-        
-        if verbose and baryons:
-            print("Halo concentration parameter B:{:.4f}".format(B))
-            print("Gas loss halo mass parameter Mb:{:1e}".format(Mb))
-            print("Effective halo stellar mass fraction fstar:{:.4f}".format(f))
-
-        
         # Halo concentration
         zf = _get_halo_collapse_redshifts(M, z, iz, dc, growth, CAMB_results, cold=True) # Halo formation redshift
         c = B*(1+zf)/(1.+z)                                                              # Halo concentration; equation (20)
@@ -194,37 +186,39 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,
         rv = hmod.virial_radius(M) 
         Uk = np.ones((len(k), len(M)))
         for iM, (_rv, _c, _nu) in enumerate(zip(rv, c, nu)): # TODO: Remove loop for speed?
-            if baryons:
-                Uk[:, iM] = _win_NFW_baryons(k*(_nu**eta), _rv, _c, M[iM], Mb, fstar, Om_b, Om_m, Om_c, hmod.rhom)[:,0]
-        
+            if T_AGN:
+                Uk[:, iM] = _win_NFW_baryons(k*(_nu**eta), _rv, _c, M[iM], Mb, fstar, Om_m, Om_c, Om_b)[:, 0]
             else:
                 Uk[:, iM] = _win_NFW(k*(_nu**eta), _rv, _c)[:, 0]
-        if baryons:
-            profile = halo.profile.Fourier(k, M, Uk, amplitude=M/hmod.rhom, mass_tracer=True) # NOTE: No Factor of 1-f_nu for baryonic, because this effect is already included!
-    
-        else:
-            profile = halo.profile.Fourier(k, M, Uk, amplitude=M*(1.-f_nu)/hmod.rhom, mass_tracer=True) # NOTE: Factor of 1-f_nu
-    
+        if T_AGN: # NOTE: No Factor of 1-f_nu for baryonic, because this effect is already included!
+            profile = halo.profile.Fourier(k, M, Uk, amplitude=M/hmod.rhom, mass_tracer=True) 
+        else: # NOTE: Factor of 1-f_nu in profile amplitude
+            profile = halo.profile.Fourier(k, M, Uk, amplitude=M*(1.-f_nu)/hmod.rhom, mass_tracer=True) 
+
         # Vanilla power spectrum calculation
-        _, Pk_1h_, _ = hmod.power_spectrum(k, Pk_lin, M, sigmaM, {'m': profile}, simple_twohalo=True)
+        _, _Pk_1h, _ = hmod.power_spectrum(k, Pk_lin, M, sigmaM, {'m': profile}, simple_twohalo=True)
 
         # HMcode tweaks
-        P_wig = _get_Pk_wiggle(k, Pk_lin, CAMB_results)   # Isolate spectral wiggle; footnote 7
-        Pk_dwl = Pk_lin-(1.-np.exp(-(k*sigmaV)**2))*P_wig # Constuct linear spectrum with smoothed wiggle; equation (15)
-        Pk_2h = Pk_dwl*(1.-f*(k/kd)**nd/(1.+(k/kd)**nd))  # Two-halo term; equation (16)
-        Pk_1h = (k/ks)**4/(1.+(k/ks)**4)*Pk_1h_['m-m']     # One-halo term; equation (17)
-        Pk_hm = (Pk_2h**alpha+Pk_1h**alpha)**(1./alpha)   # Total prediction via smoothed sum; equation (23)
-
-        if hmcodetweaks==False:
-            Pk_hm=Pk_lin+Pk_1h_['m-m']
-
+        if tweaks:
+            Pk_wig = _get_Pk_wiggle(k, Pk_lin, CAMB_results)   # Isolate spectral wiggle; footnote 7
+            Pk_dwl = Pk_lin-(1.-np.exp(-(k*sigmaV)**2))*Pk_wig # Constuct linear spectrum with smoothed wiggle; equation (15)
+            Pk_2h = Pk_dwl*(1.-f*(k/kd)**nd/(1.+(k/kd)**nd))   # Two-halo term; equation (16)
+            Pk_1h = (k/ks)**4/(1.+(k/ks)**4)*_Pk_1h['m-m']     # One-halo term; equation (17)
+            Pk_hm = (Pk_2h**alpha+Pk_1h**alpha)**(1./alpha)    # Total prediction via smoothed sum; equation (23)
+        else:
+            Pk_hm = Pk_lin+_Pk_1h['m-m']
         Pk_HMcode[iz, :] = Pk_hm
+
+    if tweaks and T_AGN:
+        suppression = _get_feedback_suppression(k, zs, CAMB_results, T_AGN, Mmin=Mmin, Mmax=Mmax, nM=nM, verbose=False)
+        Pk_HMcode *= suppression
 
     # Finish
     if verbose:
         t_finish = time()
         print('HMcode predictions complete for {:} redshifts'.format(len(zs)))
         print('Total HMcode run time: {:.3f}s'.format(t_finish-t_start))
+        print()
     return Pk_HMcode
 
 
@@ -328,56 +322,50 @@ def _win_NFW(k:np.ndarray, rv:np.ndarray, c:np.ndarray) -> np.ndarray:
     return Wk
 
 
-def _win_NFW_baryons(k:np.ndarray, rv:np.ndarray, c:np.ndarray, M:np.ndarray, Mb:float, f:float, Om_b:float, Om_m:float, Om_c:float, rhom:float) -> np.ndarray:
-    """Normalised Fourier transform for NFW profile, including baryonic effects
-    Is the same as Equation (25) of Mead et al. (2021)
+def _win_NFW_baryons(k:np.ndarray, rv:np.ndarray, c:np.ndarray, 
+                     M:np.ndarray, Mb:float, fstar:float, 
+                     Om_m:float, Om_c:float, Om_b:float) -> np.ndarray:
+    '''
+    Normalised Fourier transform for NFW profile, including baryonic effects
+    Equation (25) from Mead et al. (2021)
     Calls _win_NFW
-    """
-    Wk=_win_NFW(k, rv, c)
-
-    fg=(Om_b/Om_m-f)*(M/Mb)**2/(1+(M/Mb)**2) #Gas content (Eq. 24 with beta=2 specified)
-    Wk=((Om_c)/Om_m+fg)*Wk
-    Wk+=f
- 
+    '''
+    Wk = _win_NFW(k, rv, c)
+    fg = (Om_b/Om_m-fstar)*(M/Mb)**2/(1.+(M/Mb)**2) # Gas content (Eq. 24 with beta=2)
+    Wk = (Om_c/Om_m+fg)*Wk
+    Wk += fstar
     return Wk
 
 
-def get_Baryon_Parameters(T_AGN:float) -> dict:
-    """Maps 1-Param baryon feedback model from HMCode2020 to 6 baryonic parameters
+def _get_feedback_parameters(T_AGN:float) -> dict:
+    '''
+    Maps one-Param baryon feedback model from HMCode2020 to 6 baryonic parameters
     Uses parameters from Table 5 in Mead et al. (2021)
-    Warning:
-        This fit was obtained using the vanilla halo model! If the hmcode tweaks are used, different values are likely needed.
-
-    Args:
-        T_AGN (float): AGN Temperature parameter
-
-    Returns:
-        dict: baryonification parameters, B0, Bz, Mb0, Mbz, f0, fz
-    """
-
-    theta=np.log10(T_AGN/np.power(10,7.8))
-    params={}
-    params["B0"]=3.44-0.496*theta
-    params["Bz"]=-0.0671-0.0371*theta
-    params["Mb0"]=np.power(10, 13.87+1.81*theta) #Units: Msun/h
-    params["Mbz"]=-0.108+0.195*theta
-    params["f0"]=(2.01-0.3*theta)*1e-2
-    params["fz"]=0.409+0.0224*theta
+    This fit was obtained using the vanilla halo model! 
+    If the hmcode tweaks are used, different values are likely needed.
+    '''
+    theta = np.log10(T_AGN/np.power(10, 7.8))
+    params = {
+        'B0': 3.44-0.496*theta,
+        'Bz': -0.0671-0.0371*theta,
+        'Mb0': np.power(10, 13.87+1.81*theta), # [Msun/h]
+        'Mbz': -0.108+0.195*theta,
+        'f0': (2.01-0.3*theta)*1e-2,
+        'fz': 0.409+0.0224*theta,
+    }
     return params
 
-def get_Baryon_Suppression(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata,  T_AGN=None, hmcodetweaks=False,
-          Mmin=1e0, Mmax=1e18, nM=256, verbose=False):
-    """Calculates the ratio of the powerspectrum with baryonic effect to the dark-matter-only powerspectrum for a given T_AGN
-    Assumes the 1-param model from HMCode2020
-    Warning:
-        Since the fit for the baryonic effects was obtained with the vanilla halo model, it is not safe to set hmcodetweaks=True
-    """
-    
- 
-    baryon_params=get_Baryon_Parameters(T_AGN)
- 
-    Pk_dmo=power(k, zs, CAMB_results, Mmin, Mmax, nM, verbose, baryons=False, hmcodetweaks=hmcodetweaks)
 
-    Pk_bar=power(k, zs, CAMB_results, Mmin, Mmax, nM, verbose, baryons=True, baryon_params=baryon_params, hmcodetweaks=hmcodetweaks)
-
-    return Pk_bar/Pk_dmo
+def _get_feedback_suppression(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN:float, 
+                              Mmin=1e0, Mmax=1e18, nM=256, verbose=False) -> np.ndarray:
+    '''
+    Calculates the ratio of the powerspectrum with baryonic effects to that of dark-matter-only
+    Assumes the one-parameter T_AGN model from HMCode2020
+    Warning: Since the fit for the baryonic effects was obtained with the vanilla halo model, 
+    it is not safe to set tweaks=True below
+    '''
+    Pk_gravity = power(k, zs, CAMB_results, T_AGN=None, Mmin=Mmin, Mmax=Mmax, nM=nM, 
+                       tweaks=False, verbose=verbose)
+    Pk_feedback = power(k, zs, CAMB_results, T_AGN=T_AGN, Mmin=Mmin, Mmax=Mmax, nM=nM, 
+                        tweaks=False, verbose=verbose)
+    return Pk_feedback/Pk_gravity

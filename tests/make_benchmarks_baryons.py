@@ -58,20 +58,19 @@ for icos in range(ncos):
         wa = rng.uniform(wa_min, wa_max) if vary_wa else 0.
         if w0+wa < 0.: break
     m_nu = rng.uniform(m_nu_min, m_nu_max) if vary_m_nu else 0.
-    
-    T_AGN=rng.uniform(log10T_AGN_min, log10T_AGN_max)
-    T_AGN=np.power(10, T_AGN)
+    T_AGN = rng.uniform(log10T_AGN_min, log10T_AGN_max)
+    T_AGN = np.power(10, T_AGN)
 
-    print('Cosmology: {:d}; (Om_c, Om_b, Om_k, h, ns, sig8, w0, wa, m_nu, T_AGN) = \
+    print('Cosmology: {:d}; (Om_c, Om_b, Om_k, h, ns, sig8, w0, wa, m_nu, log10(T_AGN)) = \
 ({:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2}, {:.2e})'
-.format(icos, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, w0, wa, m_nu, T_AGN))
+.format(icos, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, w0, wa, m_nu, np.log10(T_AGN)))
     cosmologies.append([Omega_c, Omega_b, Omega_k, h, ns, sigma_8, w0, wa, m_nu, T_AGN])
 
     # Get stuff from CAMB
     _, results, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa)
 
     # Get the pyHMcode baryon suppression
-    Supp_HMcode=hmcode.get_Baryon_Suppression(k, zs, results, T_AGN)
+    Supp_HMcode = hmcode.get_Baryon_Suppression(k, zs, results, T_AGN)
     data = np.vstack((k, Supp_HMcode))
     outfile = f'benchmarks_baryons/cosmology_{icos}.dat'
     with open(outfile, 'x') as f:
