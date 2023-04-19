@@ -5,10 +5,13 @@ import numpy as np
 import camb
 
 def run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, 
-    m_nu=0., w=-1., wa=0., As=2e-9, norm_sigma8=True, kmax_CAMB=200., verbose=False):
+    m_nu=0., w=-1., wa=0., As=2e-9, norm_sigma8=True, kmax_CAMB=200., log10_T_AGN=None, verbose=False):
 
     # Sets cosmological parameters in camb to calculate the linear power spectrum
-    pars = camb.CAMBparams()
+    if log10_T_AGN:
+        pars = camb.CAMBparams(NonLinearModel=camb.nonlinear.Halofit(halofit_version="mead2020_feedback", HMCode_logT_AGN=log10_T_AGN), WantCls=False)
+    else:
+        pars = camb.CAMBparams(WantCls=False,NonLinearModel=camb.nonlinear.Halofit(halofit_version="mead2020"))
     wb, wc = Omega_b*h**2, Omega_c*h**2
 
     # This function sets standard and helium set using BBN consistency
