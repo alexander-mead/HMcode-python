@@ -154,8 +154,10 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN=None,
             eta = 0.1281*sigma8**-0.3644 # Halo bloating parameter; equation (19)
             B =   5.196                  # Minimum halo concentration; equation (20)
             alpha = 1.875*(1.603)**neff  # Transition smoothing; equation (23)
-        else: # Use vanilla-ish halo model if no HMcode tweaks used
+        else: # Use vanilla-ish halo model if no HMcode tweaks used (still uses 1-halo term suppression)
             B, eta = 4., 0.
+            ks = 0.05618*sigma8**-1.013  # One-halo damping wavenumber; equation (17)
+
 
         if T_AGN and not tweaks:
             B = feedback_params['B0']*np.power(10, z*feedback_params['Bz'])
@@ -205,8 +207,10 @@ def power(k:np.array, zs:np.array, CAMB_results:camb.CAMBdata, T_AGN=None,
             Pk_2h = Pk_dwl*(1.-f*(k/kd)**nd/(1.+(k/kd)**nd))   # Two-halo term; equation (16)
             Pk_1h = (k/ks)**4/(1.+(k/ks)**4)*_Pk_1h['m-m']     # One-halo term; equation (17)
             Pk_hm = (Pk_2h**alpha+Pk_1h**alpha)**(1./alpha)    # Total prediction via smoothed sum; equation (23)
-        else:
-            Pk_hm = Pk_lin+_Pk_1h['m-m']
+        else: # Still uses 1halo term dampening even if tweaks=False
+            Pk_1h = (k/ks)**4/(1.+(k/ks)**4)*_Pk_1h['m-m']     # One-halo term; equation (17)
+            Pk_hm = Pk_lin+Pk_1h
+
         Pk_HMcode[iz, :] = Pk_hm
 
     if T_AGN and tweaks:
