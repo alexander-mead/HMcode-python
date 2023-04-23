@@ -35,7 +35,6 @@ for icos in range(ncos):
     _, results, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa)
 
     # Get the pyHMcode spectrum
-    #Supp_HMcode = hmcode.get_feedback_suppression(k, zs, results, T_AGN)
     Pk_feedback = hmcode.power(k, zs, results, T_AGN=T_AGN, verbose=False)
     Pk_gravity = hmcode.power(k, zs, results, T_AGN=None)
     Supp_HMcode = Pk_feedback/Pk_gravity

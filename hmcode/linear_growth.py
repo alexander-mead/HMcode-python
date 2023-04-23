@@ -1,11 +1,11 @@
 # Third-party imports
 import numpy as np
-import camb
+from camb import CAMBdata
 
 # Parameters
 a_init = 1e-4 # Initial scale-factor for growth ODE integration
 
-def _w(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
+def _w(a:float, CAMB_results:CAMBdata, LCDM=False) -> float:
     '''
     Dark energy equation of state for w0, wa models
     '''
@@ -13,7 +13,7 @@ def _w(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
     return w0+(1.-a)*wa
 
 
-def _X_w(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
+def _X_w(a:float, CAMB_results:CAMBdata, LCDM=False) -> float:
     '''
     Cosmological dark energy density for w0, wa models
     '''
@@ -21,7 +21,7 @@ def _X_w(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
     return a**(-3.*(1.+w0+wa))*np.exp(-3.*wa*(1.-a))
 
 
-def _Omega_m(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
+def _Omega_m(a:float, CAMB_results:CAMBdata, LCDM=False) -> float:
     '''
     Evolution of Omgea_m with scale-factor ignoring radiation
     '''
@@ -32,7 +32,7 @@ def _Omega_m(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
     return Om_m*a**-3/_Hubble2(a, CAMB_results, LCDM)
 
 
-def _Hubble2(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
+def _Hubble2(a:float, CAMB_results:CAMBdata, LCDM=False) -> float:
     '''
     Squared Hubble parameter ignoring radiation
     Massive neutrinos are counted as 'matter'
@@ -47,7 +47,7 @@ def _Hubble2(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
     return H2
 
 
-def _AH(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
+def _AH(a:float, CAMB_results:CAMBdata, LCDM=False) -> float:
     '''
     Acceleration parameter ignoring radiation
     Massive neutrinos are counted as 'matter'
@@ -61,7 +61,7 @@ def _AH(a:float, CAMB_results:camb.CAMBdata, LCDM=False) -> float:
     return AH
 
 
-def get_growth_interpolator(CAMB_results:camb.CAMBdata, LCDM=False) -> callable:
+def get_growth_interpolator(CAMB_results:CAMBdata, LCDM=False) -> callable:
     '''
     Solve the linear growth ODE and returns an interpolating function for the solution
     LCDM = True forces w = -1 and imposes flatness by modifying the dark-energy density

@@ -2,16 +2,17 @@
 import camb
 
 def run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, 
-    m_nu=0., w=-1., wa=0., As=2e-9, norm_sigma8=True, kmax_CAMB=200., 
-    log10_T_AGN=None, verbose=False):
+    m_nu=0., w=-1., wa=0., log10_T_AGN=None,
+    As=2e-9, norm_sigma8=True, kmax_CAMB=200., verbose=False):
 
     # Sets cosmological parameters in camb to calculate the linear power spectrum
+    # TODO: Setting 'WantCls=False' in CAMBparams spoils the agreement... why?
     if log10_T_AGN:
         non_linear_model = camb.nonlinear.Halofit(halofit_version="mead2020_feedback", 
                                                   HMCode_logT_AGN=log10_T_AGN)
     else:
         non_linear_model = camb.nonlinear.Halofit(halofit_version="mead2020")
-    pars = camb.CAMBparams(WantCls=False, NonLinearModel=non_linear_model)
+    pars = camb.CAMBparams(NonLinearModel=non_linear_model) 
     wb, wc = Omega_b*h**2, Omega_c*h**2
 
     # This function sets standard and helium set using BBN consistency
