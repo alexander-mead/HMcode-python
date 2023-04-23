@@ -1,4 +1,4 @@
-# Standard imports
+# Third-party imports
 import numpy as np
 
 # Project imports
