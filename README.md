@@ -54,12 +54,12 @@ I coded this `Python` version of `HMcode-2020` ([Mead et al. 2021](https://arxiv
 You might also be interested in [`pyhalomodel`](https://pypi.org/project/pyhalomodel/), upon which this code depends, which implements a vanilla halo-model calculation for any desired large-scale-structure tracer. Alternatively, and very confusingly, you might be interested in this [`pyhmcode`](https://pypi.org/project/pyhmcode/), which provides a wrapper around the original `Fortran` `HMcode` implementation.
 
 I compared it against the `CAMB-HMcode` version for 100 random sets of cosmological parameters ($k < 10 h\mathrm{Mpc}^{-1}$; $z < 3$). The level of agreement between the two codes is as follows:
-- LCDM: Mean error: 0.10%; Standard deviation of error: 0.03%; Worst-case error; 0.21%
-- k-LCDM: Mean error: 0.11%; Standard deviation of error: 0.03%; Worst-case error; 0.23%
-- w-CDM: Mean error: 0.10%; Standard deviation of error: 0.03%; Worst-case error; 0.20%
-- w(a)-CDM: Mean error: 0.13%; Standard deviation of error: 0.06%; Worst-case error; 0.48%
-- nu-LCDM: Mean error: 0.47%; Standard deviation of error: 0.44%; Worst-case error; 2.01% (larger errors strongly correlated with neutrino mass)
-- nu-k-w(a)-CDM: Mean error: 0.42%; Standard deviation of error: 0.43%; Worst-case error; 2.02% (larger errors strongly correlated with neutrino mass)
+- LCDM: Mean error: 0.10%; Standard deviation of error: 0.03%; Worst-case error; 0.28%
+- k-LCDM: Mean error: 0.12%; Standard deviation of error: 0.04%; Worst-case error; 0.32%
+- w-CDM: Mean error: 0.11%; Standard deviation of error: 0.03%; Worst-case error; 0.31%
+- w(a)-CDM: Mean error: 0.14%; Standard deviation of error: 0.08%; Worst-case error; 0.77%
+- nu-LCDM: Mean error: 0.45%; Standard deviation of error: 0.43%; Worst-case error; 1.97% (larger errors strongly correlated with neutrino mass)
+- nu-k-w(a)-CDM: Mean error: 0.41%; Standard deviation of error: 0.42%; Worst-case error; 1.99% (larger errors strongly correlated with neutrino mass)
 
 These comparisons can be reproduced using the `comparisons/CAMB.py` script.
 
