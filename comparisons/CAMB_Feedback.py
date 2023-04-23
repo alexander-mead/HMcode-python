@@ -124,8 +124,7 @@ for icos in range(ncos):
 
         axs[0].legend()
         axs[1].legend()
-        #plt.tight_layout()
-        plt.savefig(f"Feedback_Cosmology_{icos}_wo1Hsuppression.png")
+        plt.savefig(f"Feedback_Cosmology_{icos}.png")
 
     
     # Calculate maximum deviation between pyHMcode and the version in CAMB
