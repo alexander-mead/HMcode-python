@@ -1,4 +1,4 @@
-# Standard imports
+# Third-party imports
 import numpy as np
 
 def derivative_from_samples(x:float, xs:np.array, fs:np.array) -> float:

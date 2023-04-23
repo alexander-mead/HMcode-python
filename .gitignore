@@ -5,6 +5,7 @@ dist/
 
 # Plots
 *.pdf
+*.png
 
 # VScode
 .vscode/

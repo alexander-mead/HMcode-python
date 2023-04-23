@@ -1,24 +1,24 @@
-# Standard imports
-import numpy as np
-
 # Third-party imports
 import camb
 
 def run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, 
-    m_nu=0., w=-1., wa=0., As=2e-9, norm_sigma8=True, kmax_CAMB=200., log10_T_AGN=None, verbose=False):
+    m_nu=0., w=-1., wa=0., As=2e-9, norm_sigma8=True, kmax_CAMB=200., 
+    log10_T_AGN=None, verbose=False):
 
     # Sets cosmological parameters in camb to calculate the linear power spectrum
     if log10_T_AGN:
-        pars = camb.CAMBparams(NonLinearModel=camb.nonlinear.Halofit(halofit_version="mead2020_feedback", HMCode_logT_AGN=log10_T_AGN), WantCls=False)
+        non_linear_model = camb.nonlinear.Halofit(halofit_version="mead2020_feedback", 
+                                                  HMCode_logT_AGN=log10_T_AGN)
     else:
-        pars = camb.CAMBparams(WantCls=False,NonLinearModel=camb.nonlinear.Halofit(halofit_version="mead2020"))
+        non_linear_model = camb.nonlinear.Halofit(halofit_version="mead2020")
+    pars = camb.CAMBparams(WantCls=False, NonLinearModel=non_linear_model)
     wb, wc = Omega_b*h**2, Omega_c*h**2
 
     # This function sets standard and helium set using BBN consistency
     pars.set_cosmology(ombh2=wb, omch2=wc, H0=100.*h, mnu=m_nu, omk=Omega_k)
     pars.set_dark_energy(w=w, wa=wa, dark_energy_model='ppf')
     pars.InitPower.set_params(As=As, ns=ns, r=0.)
-    pars.set_matter_power(redshifts=zs, kmax=kmax_CAMB) # Setup the linear matter power spectrum
+    pars.set_matter_power(redshifts=zs, kmax=kmax_CAMB) # Linear matter power spectrum
     Omega_m = pars.omegam # Extract the matter density
 
     # Scale 'As' to be correct for the desired 'sigma_8' value if necessary

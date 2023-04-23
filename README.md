@@ -63,6 +63,12 @@ I compared it against the `CAMB-HMcode` version for 100 random sets of cosmologi
 
 These comparisons can be reproduced using the `comparisons/CAMB.py` script.
 
+The power-spectrum suppression caused by baryonic feedback has also been implemented, and the level of agreement between the *suppression* predicted by this code and the same implementation in `CAMB` is as follows:
+- LCDM: Mean error: 0.02%; Standard deviation of error: <0.01%; Worst-case error; 0.03%
+- nu-k-w(a)-CDM: Mean error: 0.06%; Standard deviation of error: 0.07%; Worst-case error; 0.49% (larger errors strongly correlated with neutrino mass)
+
+The comparisons can be reproduced using the `comparisons/CAMB_feedback.py` script.
+
 While the quoted accuracy of `HMcode-2020` relative to simulations is RMS ~2.5%, note that the accuracy is anti-correlated with neutrino masses (cf. Fig. 2 of [Mead et al. 2021](https://arxiv.org/abs/2009.01858)). The larger discrepancies between the codes for massive neutrinos (2% for ~1eV) may seem worrisome, but here are some reasons why I am not that worried:
 - Here, neutrinos are treated as completely cold matter when calculating the linear growth factors, whereas in `CAMB-HMcode` the transition from behaving like radiation to behaving like matter is accounted for in the linear growth.
 - Here the *cold* matter power spectrum is taken directly from `CAMB` whereas in `CAMB-HMcode` the *cold* spectrum is calculated approximately from the total matter power spectrum using approximations for the scale-dependent growth rate from [Eisenstein & Hu (1999)](https://arxiv.org/abs/astro-ph/9710252).

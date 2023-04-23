@@ -1,16 +1,17 @@
 # Standard imports
 import sys
+
+# Third-part imports
 import numpy as np
 import matplotlib.pyplot as plt
 
 # Project imports
-sys.path.append('../')
-
 import hmcode
 import hmcode.camb_stuff as camb_stuff
 import hmcode.utility as util
 
-plotting=True
+# Make plots or not
+plotting = False
 
 # Vary these parameters
 vary_Omega_k = True
@@ -29,7 +30,6 @@ w0_min, w0_max = -1.3, -0.7
 wa_min, wa_max = -1.73, 1.28
 m_nu_min, m_nu_max = 0., 1.
 log10T_AGN_min, log10T_AGN_max = 7.6, 8.3
-
 
 # Number of cosmological models to test
 try:
@@ -69,7 +69,7 @@ for icos in range(ncos):
         if w0+wa < 0.: break
     m_nu = rng.uniform(m_nu_min, m_nu_max) if vary_m_nu else 0.
 
-    #Gravity only spectra
+    ### Gravity only spectra ###
 
     # Get stuff from CAMB
     _, results_gravity, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa)
@@ -83,8 +83,9 @@ for icos in range(ncos):
     # Get the new pyHMcode spectrum
     Pk_HMcode_gravity = hmcode.power(k, zs, results_gravity, verbose=verbose)
 
+    ### ###
 
-    # Spectra with feedback
+    ### Spectra with feedback ###
 
     # Get stuff from CAMB
     _, results_feedback, _, _, _ = camb_stuff.run(zs, Omega_c, Omega_b, Omega_k, h, ns, sigma_8, m_nu, w0, wa, log10_T_AGN=log10T_AGN)
@@ -98,11 +99,13 @@ for icos in range(ncos):
     # Get the new pyHMcode spectrum
     Pk_HMcode_feedback = hmcode.power(k, zs, results_gravity, verbose=verbose, T_AGN=np.power(10, log10T_AGN))
 
-    # Calculate suppressions
+    ### ###
 
+    # Calculate suppressions
     Rk_CAMB=Pk_CAMB_feedback/Pk_CAMB_gravity
     Rk_HMcode=Pk_HMcode_feedback/Pk_HMcode_gravity
 
+    # Plotting
     if plotting:
         fig, axs=plt.subplots(nrows=2, sharex=True, figsize=(10,7))
         plt.subplots_adjust(hspace=0.001, bottom=0.2)
@@ -119,14 +122,13 @@ for icos in range(ncos):
         for i,z in enumerate(zs):
             axs[0].plot(k, Rk_CAMB[i], label=f"CAMB, z={z}", color=f"C{i}", ls='--')
             axs[0].plot(k, Rk_HMcode[i], label=f"HMcode-Python, z={z}", color=f"C{i}")
-        
             axs[1].plot(k, 1-(Rk_CAMB[i]/Rk_HMcode[i]), label=f"z={z}", color=f"C{i}")
 
         axs[0].legend()
         axs[1].legend()
-        plt.savefig(f"Feedback_Cosmology_{icos}.png")
+        plt.savefig(f"plots/Feedback_Cosmology_{icos}.png")
+        plt.close()
 
-    
     # Calculate maximum deviation between pyHMcode and the version in CAMB
     max_error = np.max(np.abs(-1.+Rk_HMcode/Rk_CAMB))
     max_errors.append(max_error)
