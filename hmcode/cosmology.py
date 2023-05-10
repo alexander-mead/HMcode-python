@@ -11,9 +11,9 @@ dc0 = (3./20.)*(12.*np.pi)**(2./3.) # delta_c = ~1.686' EdS linear collapse thre
 
 # Parameters
 xmin_Tk = 1e-5    # Scale at which to switch to Taylor expansion approximation in tophat Fourier functions
-eps_sigmaR = 1e-4 # Accuracy of the sigmaR integration
-eps_sigmaV = 1e-4 # Accuracy of the sigmaV integration
-eps_neff = 1e-4   # Accuracy of the neff integration (d ln sigma^2/d ln k)
+eps_sigmaR = 1e-4 # Relative accuracy of the sigmaR integration
+eps_sigmaV = 1e-4 # Relative accuracy of the sigmaV integration
+eps_neff = 1e-4   # Relative accuracy of the neff integration (d ln sigma^2/d ln k)
 
 ### Backgroud ###
 
@@ -125,10 +125,10 @@ def sigmaR(R:np.ndarray, Pk:callable, kmin=0., kmax=np.inf, eps=eps_sigmaR, tran
     def sigmaR_vec(R:float, Pk:callable):
         if transform_integrand:
              sigmaR_squared, _ = integrate.quad(lambda t: _transformed_integrand(t, R, Pk, _sigmaR_integrand), 
-                                                0., 1., epsabs=eps, epsrel=eps)
+                                                0., 1., epsabs=0., epsrel=eps)
         else:
             sigmaR_squared, _ = integrate.quad(lambda k: _sigmaR_integrand(k, R, Pk), 
-                                               kmin, kmax, epsabs=eps, epsrel=eps)
+                                               kmin, kmax, epsabs=0., epsrel=eps)
         sigmaR = np.sqrt(sigmaR_squared/(2.*np.pi**2))
         return sigmaR
     sigmaR_func = np.vectorize(sigmaR_vec, excluded=['Pk'])
@@ -156,10 +156,10 @@ def sigmaV(R:float, Pk:callable, kmin=0., kmax=np.inf, eps=eps_sigmaV, transform
     '''
     if transform_integrand:
         sigmaV_squared, _ = integrate.quad(lambda t: _transformed_integrand(t, R, Pk, _sigmaV_integrand), 
-                                           0., 1., epsabs=eps, epsrel=eps)
+                                           0., 1., epsabs=0., epsrel=eps)
     else:
         sigmaV_squared, _ = integrate.quad(lambda k: _sigmaV_integrand(k, R, Pk), 
-                                           kmin, kmax, epsabs=eps, epsrel=eps)
+                                           kmin, kmax, epsabs=0., epsrel=eps)
     sigmaV = np.sqrt(sigmaV_squared/(2.*np.pi**2))
     sigmaV /= np.sqrt(3.) # Convert from 3D displacement to 1D displacement
     return sigmaV
@@ -177,10 +177,10 @@ def _dlnsigma2_dlnR(R:float, Pk:callable, kmin=0., kmax=np.inf, eps=eps_neff, tr
     '''
     if transform_integrand:
         dsigma, _ = integrate.quad(lambda t: _transformed_integrand(t, R, Pk, _dsigmaR_integrand), 
-                                   0., 1., epsabs=eps, epsrel=eps)
+                                   0., 1., epsabs=0., epsrel=eps)
     else:
         dsigma, _ = integrate.quad(lambda k: _dsigmaR_integrand(k, R, Pk), 
-                                   kmin, kmax, epsabs=eps, epsrel=eps)
+                                   kmin, kmax, epsabs=0., epsrel=eps)
     dsigma = R*dsigma/(np.pi*sigmaR(R, Pk))**2
     return dsigma
 
